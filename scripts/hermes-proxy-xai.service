@@ -1,0 +1,18 @@
+[Unit]
+Description=Hermes xAI OAuth OpenAI-compatible proxy (SOL-RIGHT)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=shanem
+Group=shanem
+WorkingDirectory=/home/shanem
+Environment=HOME=/home/shanem
+Environment=PATH=/home/shanem/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/shanem/.local/bin/hermes proxy start --provider xai --host 127.0.0.1 --port 8645
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

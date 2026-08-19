@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SOL-RIGHT Calendar | Consultations</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <style>
+    .cal-page { padding: 2rem 0 4rem; }
+    .cal-head { display:flex; flex-wrap:wrap; gap:1rem; justify-content:space-between; align-items:flex-end; margin-bottom:1.5rem; }
+    .cal-head h1 { margin:0; font-size:1.75rem; }
+    .cal-meta { color: var(--muted); max-width: 36rem; line-height:1.5; }
+    .sub-box {
+      background: linear-gradient(160deg, #0d3b2e 0%, #0b1726 70%);
+      border: 1px solid #1f6b4f;
+      border-radius: 14px;
+      padding: 1rem 1.15rem;
+      margin-bottom: 1.5rem;
+      color: #e8fff5;
+    }
+    .sub-box code, .sub-box .feed {
+      display:block;
+      margin-top:.5rem;
+      padding:.65rem .75rem;
+      background: rgba(0,0,0,.35);
+      border-radius: 8px;
+      word-break: break-all;
+      font-size: .9rem;
+      color: #b8f0d4;
+    }
+    .sub-box ol { margin: .5rem 0 0 1.1rem; padding:0; color:#cfe9dc; }
+    .sub-box a { color:#7dffa8; }
+    .cal-grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .cal-card {
+      background: #0f1c2c;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    }
+    .cal-card h3 { margin:0 0 .35rem; font-size:1.05rem; }
+    .cal-card .when { color:#7dffa8; font-weight:600; margin-bottom:.5rem; }
+    .cal-card .meta { color: var(--muted); font-size:.92rem; line-height:1.45; }
+    .cal-card .actions { margin-top:.75rem; display:flex; gap:.5rem; flex-wrap:wrap; }
+    .cal-empty {
+      padding: 2rem;
+      text-align:center;
+      color: var(--muted);
+      border: 1px dashed rgba(255,255,255,.12);
+      border-radius: 14px;
+    }
+    .pill {
+      display:inline-block;
+      padding:.15rem .5rem;
+      border-radius:999px;
+      font-size:.75rem;
+      background:#1a3a2a;
+      color:#9dffc4;
+      margin-bottom:.5rem;
+    }
+    .btn.small { padding:.4rem .7rem; font-size:.85rem; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap bar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true">☀</div>
+        <div>
+          <div class="name">SOL-RIGHT Solar</div>
+          <div class="tag">Installed RIGHT!!</div>
+        </div>
+      </div>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/#estimate">Estimate</a>
+        <a href="/calendar.html" aria-current="page">Calendar</a>
+        <a class="cta" href="/#estimate">Free Savings Estimate</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="cal-page">
+    <div class="wrap">
+      <div class="cal-head">
+        <div>
+          <p class="eyebrow">Owner calendar</p>
+          <h1>Consultations &amp; call bookings</h1>
+          <p class="cal-meta">
+            Appointments created when the Retell AI phone agent books a meeting.
+            Syncs to your Outlook (live.com) or Gmail by subscribing to the ICS feed below.
+          </p>
+        </div>
+        <div>
+          <button class="btn primary" id="refreshBtn" type="button">Refresh</button>
+        </div>
+      </div>
+
+      <div class="sub-box">
+        <strong>Sync to shane.a.miller@live.com (Outlook) or Gmail</strong>
+        <span class="feed" id="feedUrl">Loading feed URL…</span>
+        <ol>
+          <li><strong>Outlook / live.com:</strong> Calendar → Add calendar → Subscribe from web → paste feed URL → Import</li>
+          <li><strong>Google Calendar:</strong> Other calendars (+) → From URL → paste feed URL</li>
+          <li>New Retell bookings appear after the calendar refreshes (often a few minutes)</li>
+        </ol>
+        <p style="margin:.75rem 0 0; font-size:.9rem; opacity:.9">
+          LAN feed works on your network. For phone apps off-LAN, expose this host via HTTPS tunnel and use that public feed URL.
+        </p>
+      </div>
+
+      <div id="list" class="cal-grid" aria-live="polite"></div>
+    </div>
+  </main>
+
+  <script>
+    async function load() {
+      const list = document.getElementById('list');
+      list.innerHTML = '<div class="cal-empty">Loading…</div>';
+      try {
+        const res = await fetch('/api/calendar/appointments?days=90');
+        const data = await res.json();
+        document.getElementById('feedUrl').textContent = data.feed_url || (location.origin + '/api/calendar/feed.ics');
+        const rows = data.appointments || [];
+        if (!rows.length) {
+          list.innerHTML = '<div class="cal-empty">No upcoming appointments yet. When Retell books a consult, it will show here and in your subscribed calendar.</div>';
+          return;
+        }
+        list.innerHTML = '';
+        for (const a of rows) {
+          const start = a.starts_at ? new Date(a.starts_at) : null;
+          const when = start && !isNaN(start)
+            ? start.toLocaleString(undefined, { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' })
+            : (a.starts_at || 'TBD');
+          const card = document.createElement('article');
+          card.className = 'cal-card';
+          card.innerHTML = `
+            <div class="pill">${a.status || 'scheduled'} · ${a.source || 'retell'}</div>
+            <h3></h3>
+            <div class="when"></div>
+            <div class="meta"></div>
+            <div class="actions">
+              <a class="btn ghost small" href="/api/calendar/appointments/${a.id}.ics">Download .ics</a>
+            </div>
+          `;
+          card.querySelector('h3').textContent = a.title || 'Consultation';
+          card.querySelector('.when').textContent = when;
+          card.querySelector('.meta').innerHTML = [
+            a.customer_name ? `<div><strong>${escapeHtml(a.customer_name)}</strong></div>` : '',
+            a.customer_phone ? `<div>${escapeHtml(a.customer_phone)}</div>` : '',
+            a.customer_address ? `<div>${escapeHtml(a.customer_address)}</div>` : '',
+            a.location ? `<div>${escapeHtml(a.location)}</div>` : '',
+            a.lead_id ? `<div>Lead #${a.lead_id}</div>` : '',
+          ].join('');
+          list.appendChild(card);
+        }
+      } catch (e) {
+        list.innerHTML = `<div class="cal-empty">Failed to load calendar: ${escapeHtml(String(e))}</div>`;
+      }
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    document.getElementById('refreshBtn').addEventListener('click', load);
+    load();
+  </script>
+</body>
+</html>

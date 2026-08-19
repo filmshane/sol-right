@@ -1,0 +1,12 @@
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+httpx==0.28.1
+pydantic==2.11.3
+pydantic-settings==2.9.1
+python-multipart==0.0.20
+aiosqlite==0.21.0
+pillow==11.2.1
+tifffile==2025.5.10
+numpy==2.2.5
+pyproj==3.7.1
+chromadb>=0.5.0

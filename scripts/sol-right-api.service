@@ -1,0 +1,21 @@
+[Unit]
+Description=SOL-RIGHT Solar lead-gen agent API
+After=network-online.target hermes-proxy-xai.service
+Wants=network-online.target
+Requires=hermes-proxy-xai.service
+
+[Service]
+Type=simple
+User=shanem
+Group=shanem
+WorkingDirectory=/opt/sol-right
+Environment=HOME=/home/shanem
+EnvironmentFile=-/opt/sol-right/.env
+Environment=PYTHONPATH=/opt/sol-right
+ExecStart=/opt/sol-right/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8791 --log-level info
+Restart=on-failure
+RestartSec=3
+ReadWritePaths=/opt/sol-right/data /opt/sol-right/logs
+
+[Install]
+WantedBy=multi-user.target
