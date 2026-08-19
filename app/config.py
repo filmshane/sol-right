@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     service_area: str = "Greater Chattanooga, TN and Greater Cleveland, TN"
     contact_phone: str = "(423) 555-0145"
     contact_email: str = "hello@sol-right.local"
-    public_base_url: str = "http://107.221.94.155:8080"
+    public_base_url: str = "http://127.0.0.1:8080"
 
     # Owner calendar / notifications
     owner_email: str = "shane.a.miller@live.com"
